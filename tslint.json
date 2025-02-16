@@ -1,6 +1,6 @@
 {
-    "extends": ["tslint-config-prettier"],
-    "rules": {
-        "jsx-key": false
-    }
+	"extends": ["tslint-config-prettier"],
+	"rules": {
+		"jsx-key": false
+	}
 }

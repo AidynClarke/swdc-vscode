@@ -1,47 +1,38 @@
 {
-    "version": "0.2.0",
-    "configurations": [
-        {
-            "type": "extensionHost",
-            "request": "launch",
-            "name": "Launch Extension",
-            "runtimeExecutable": "${execPath}",
-            "stopOnEntry": false,
-            "sourceMaps": true,
-            "args": [
-                "--extensionDevelopmentPath=${workspaceFolder}"
-            ],
-            "env": {
-                "NODE_ENV": "test"
-            },
-            "outFiles": [
-                "${workspaceFolder}/dist/extension.js"
-            ],
-            "preLaunchTask": "npm: watch"
-        },
-        {
-            "name": "Extension Tests",
-            "type": "extensionHost",
-            "request": "launch",
-            "runtimeExecutable": "${execPath}",
-            "args": [
-                "--extensionDevelopmentPath=${workspaceFolder}",
-                "--extensionTestsPath=${workspaceFolder}/out/test"
-            ],
-            "outFiles": [
-                "${workspaceFolder}/out/test/**/*.js"
-            ],
-            "preLaunchTask": "npm: test-compile"
-        }
-    ],
-    "compounds": [
-        {
-            "name": "Multiple Extensions",
-            // Launch 2 debugger extensions at once
-            "configurations": [
-                "Launch Extension",
-                "Launch Extension"
-            ]
-        }
-    ]
+	"version": "0.2.0",
+	"configurations": [
+		{
+			"type": "extensionHost",
+			"request": "launch",
+			"name": "Launch Extension",
+			"runtimeExecutable": "${execPath}",
+			// "stopOnEntry": false,
+			"sourceMaps": true,
+			"args": ["--extensionDevelopmentPath=${workspaceFolder}"],
+			"env": {
+				"NODE_ENV": "test"
+			},
+			"outFiles": ["${workspaceFolder}/dist/extension.js"],
+			"preLaunchTask": "npm: watch"
+		},
+		{
+			"name": "Extension Tests",
+			"type": "extensionHost",
+			"request": "launch",
+			"runtimeExecutable": "${execPath}",
+			"args": [
+				"--extensionDevelopmentPath=${workspaceFolder}",
+				"--extensionTestsPath=${workspaceFolder}/out/test"
+			],
+			"outFiles": ["${workspaceFolder}/out/test/**/*.js"],
+			"preLaunchTask": "npm: test-compile"
+		}
+	],
+	"compounds": [
+		{
+			"name": "Multiple Extensions",
+			// Launch 2 debugger extensions at once
+			"configurations": ["Launch Extension", "Launch Extension"]
+		}
+	]
 }

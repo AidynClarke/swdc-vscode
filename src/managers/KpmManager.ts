@@ -1,80 +1,92 @@
-import {workspace, Disposable, RelativePattern, Uri} from 'vscode';
-import { getUserPreferences } from '../DataController';
-import { getFirstWorkspaceFolder, logIt } from '../Util';
-import { TrackerManager } from './TrackerManager';
+import { Disposable, RelativePattern, type Uri, workspace } from "vscode";
+import { getUserPreferences } from "../DataController";
+import { getFirstWorkspaceFolder, logIt } from "../Util";
+import { TrackerManager } from "./TrackerManager";
 
-import * as fs from 'fs';
+import * as fs from "node:fs";
 
 export class KpmManager {
-  private static instance: KpmManager;
+	private static instance: KpmManager;
 
-  private _disposable: Disposable;
+	private _disposable: Disposable;
 
-  private tracker: TrackerManager;
+	private tracker: TrackerManager;
 
-  constructor() {
-    let subscriptions: Disposable[] = [];
-    this.tracker = TrackerManager.getInstance();
+	constructor() {
+		const subscriptions: Disposable[] = [];
+		this.tracker = TrackerManager.getInstance();
 
-    const workspaceFolder = getFirstWorkspaceFolder();
-    if (workspaceFolder) {
-      // Watch .git directory changes
-      // Only works if the git directory is in the workspace
-      const localGitWatcher = workspace.createFileSystemWatcher(
-        new RelativePattern(workspaceFolder, '{**/.git/refs/heads/**}')
-      );
-      const remoteGitWatcher = workspace.createFileSystemWatcher(
-        new RelativePattern(workspaceFolder, '{**/.git/refs/remotes/**}')
-      );
-      subscriptions.push(localGitWatcher);
-      subscriptions.push(remoteGitWatcher);
-      subscriptions.push(localGitWatcher.onDidChange(this._onCommitHandler, this));
-      subscriptions.push(remoteGitWatcher.onDidChange(this._onCommitHandler, this));
-      subscriptions.push(remoteGitWatcher.onDidCreate(this._onCommitHandler, this));
-      subscriptions.push(remoteGitWatcher.onDidDelete(this._onBranchDeleteHandler, this));
-    }
+		const workspaceFolder = getFirstWorkspaceFolder();
+		if (workspaceFolder) {
+			// Watch .git directory changes
+			// Only works if the git directory is in the workspace
+			const localGitWatcher = workspace.createFileSystemWatcher(
+				new RelativePattern(workspaceFolder, "{**/.git/refs/heads/**}"),
+			);
+			const remoteGitWatcher = workspace.createFileSystemWatcher(
+				new RelativePattern(workspaceFolder, "{**/.git/refs/remotes/**}"),
+			);
+			subscriptions.push(localGitWatcher);
+			subscriptions.push(remoteGitWatcher);
+			subscriptions.push(
+				localGitWatcher.onDidChange(this._onCommitHandler, this),
+			);
+			subscriptions.push(
+				remoteGitWatcher.onDidChange(this._onCommitHandler, this),
+			);
+			subscriptions.push(
+				remoteGitWatcher.onDidCreate(this._onCommitHandler, this),
+			);
+			// wijbeiwbeifgwe
+			subscriptions.push(
+				remoteGitWatcher.onDidDelete(this._onBranchDeleteHandler, this),
+			);
+		}
 
-    this._disposable = Disposable.from(...subscriptions);
-  }
+		this._disposable = Disposable.from(...subscriptions);
+	}
 
-  static getInstance(): KpmManager {
-    if (!KpmManager.instance) {
-      KpmManager.instance = new KpmManager();
-    }
+	static getInstance(): KpmManager {
+		if (!KpmManager.instance) {
+			KpmManager.instance = new KpmManager();
+		}
 
-    return KpmManager.instance;
-  }
+		return KpmManager.instance;
+	}
 
-  private async _onCommitHandler(event: Uri) {
-    const preferences: any = await getUserPreferences();
-    if (preferences?.disableGitData) return;
+	private async _onCommitHandler(event: Uri) {
+		// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+		const preferences: any = await getUserPreferences();
+		if (preferences?.disableGitData) return;
 
-    // Branches with naming style of "feature/fix_the_thing" will fire an
-    // event when the /feature directory is created. Check if file.
-    const stat = fs.statSync(event.path);
-    if (!stat?.isFile()) return;
+		// Branches with naming style of "feature/fix_the_thing" will fire an
+		// event when the /feature directory is created. Check if file.
+		const stat = fs.statSync(event.path);
+		if (!stat?.isFile()) return;
 
-    if (event.path.includes('/.git/refs/heads/')) {
-      // /.git/refs/heads/<branch_name>
-      const branch = event.path.split('.git/')[1];
-      let commit;
-      try {
-        commit = fs.readFileSync(event.path, 'utf8').trimEnd();
-      } catch (err: any) {
-        logIt(`Error reading ${event.path}: ${err.message}`);
-      }
-      this.tracker.trackGitLocalEvent('local_commit', branch, commit);
-    } else if (event.path.includes('/.git/refs/remotes/')) {
-      // /.git/refs/remotes/<branch_name>
-      this.tracker.trackGitRemoteEvent(event);
-    }
-  }
+		if (event.path.includes("/.git/refs/heads/")) {
+			// /.git/refs/heads/<branch_name>
+			const branch = event.path.split(".git/")[1];
+			// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+			let commit: any;
+			try {
+				commit = fs.readFileSync(event.path, "utf8").trimEnd();
+				// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+			} catch (err: any) {
+				logIt(`Error reading ${event.path}: ${err.message}`);
+			}
+			this.tracker.trackGitLocalEvent("local_commit", branch, commit);
+		} else if (event.path.includes("/.git/refs/remotes/")) {
+			// /.git/refs/remotes/<branch_name>
+			this.tracker.trackGitRemoteEvent(event);
+		}
+	}
 
-  private async _onBranchDeleteHandler(event: Uri) {
-    this.tracker.trackGitDeleteEvent(event);
-  }
+	private async _onBranchDeleteHandler(event: Uri) {
+		this.tracker.trackGitDeleteEvent(event);
+	}
 
-  public dispose() {
-    this._disposable.dispose();
-  }
+	public dispose() {
+		this._disposable.dispose();
+	}
 }

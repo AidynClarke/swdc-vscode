@@ -1,8 +1,8 @@
-import {getImage} from '../Util';
+import { getImage } from "../Util";
 
 export async function getConnectionErrorHtml() {
-  const dancePartyImg = `vscode-resource:${getImage('404-image.png')}`;
-  return `<!DOCTYPE html>
+	const dancePartyImg = `vscode-resource:${getImage("404-image.png")}`;
+	return `<!DOCTYPE html>
       <html lang="en">
       <head>
           <meta charset="UTF-8">
